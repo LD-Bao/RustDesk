@@ -24,15 +24,6 @@ else
     exit 1
 fi
 
-# 创建密钥目录并生成 ed25519 密钥文件
-if [[ ! -f "/root/.config/rustdesk/id_ed25519" ]]; then
-    echo "生成 ed25519 密钥文件..."
-    sudo mkdir -p /root/.config/rustdesk
-    sudo ssh-keygen -t ed25519 -f /root/.config/rustdesk/id_ed25519 -N ""
-else
-    echo "ed25519 密钥文件已存在，跳过生成。"
-fi
-
 # 创建 hbbs 服务文件
 echo "创建 hbbs 服务文件..."
 sudo tee /etc/systemd/system/hbbs.service > /dev/null <<EOF
@@ -42,7 +33,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/hbbs -k /etc/rustdesk/hbbs.key
+ExecStart=/usr/local/bin/hbbs -k /var/lib/rustdesk-server/id_ed25519
 Restart=on-failure
 
 [Install]
@@ -71,10 +62,17 @@ sudo systemctl daemon-reload
 sudo systemctl enable hbbs hbbr
 sudo systemctl start hbbs hbbr
 
-# 验证服务状态
-echo "验证 RustDesk 服务状态..."
-sudo systemctl status hbbs --no-pager -l
-sudo systemctl status hbbr --no-pager -l
+# 等待密钥生成
+echo "等待 RustDesk 自动生成密钥文件..."
+sleep 5  # 等待一会，确保密钥文件生成
+
+# 检查密钥文件是否生成
+if [[ -f "/var/lib/rustdesk-server/id_ed25519.pub" ]]; then
+    echo "密钥文件已生成。"
+else
+    echo "密钥文件未生成，请检查服务状态。"
+    exit 1
+fi
 
 # 获取服务器公网 IP 地址
 server_ip=$(curl -s https://ifconfig.me)
@@ -86,5 +84,5 @@ echo "服务器信息："
 echo "服务器公网地址: $server_ip"
 echo "服务器端口 (默认): 21116"
 echo "公钥内容 (复制到客户端以便连接到此服务器)："
-cat /root/.config/rustdesk/id_ed25519.pub
+cat /var/lib/rustdesk-server/id_ed25519.pub
 echo "--------------------------------------"
