@@ -73,3 +73,53 @@ sudo find / -name "id_ed25*" 2>/dev/null
 ---
 
 复制以上流程到 GitHub 后，用户即可使用一键安装脚本或手动配置 RustDesk 服务器。
+
+## 卸载
+要卸载 RustDesk 服务器，您可以使用以下命令来删除已安装的组件和配置文件：
+
+1. **停止并禁用服务**
+
+   首先停止 `hbbs` 和 `hbbr` 服务：
+
+   ```bash
+   sudo systemctl stop rustdesk-hbbs
+   sudo systemctl stop rustdesk-hbbr
+   ```
+
+   禁用服务以防止它们在系统启动时自动运行：
+
+   ```bash
+   sudo systemctl disable rustdesk-hbbs
+   sudo systemctl disable rustdesk-hbbr
+   ```
+
+2. **卸载 RustDesk 服务器组件**
+
+   假设您使用的是 `.deb` 文件安装的 RustDesk 服务器组件，可以使用以下命令卸载：
+
+   ```bash
+   sudo apt remove --purge rustdesk-server-hbbs
+   sudo apt remove --purge rustdesk-server-hbbr
+   ```
+
+3. **删除残留文件和配置文件**
+
+   如果有残留的文件或配置文件，可以手动删除：
+
+   ```bash
+   sudo rm -rf /usr/bin/hbbs /usr/bin/hbbr
+   sudo rm -rf /usr/local/bin/hbbs /usr/local/bin/hbbr
+   sudo rm -rf /var/lib/rustdesk-server
+   sudo rm -f /etc/systemd/system/rustdesk-hbbs.service
+   sudo rm -f /etc/systemd/system/rustdesk-hbbr.service
+   ```
+
+4. **重新加载系统守护进程**
+
+   删除服务文件后，重新加载 `systemd` 守护进程：
+
+   ```bash
+   sudo systemctl daemon-reload
+   ```
+
+这样就可以完全卸载 RustDesk 服务器。
