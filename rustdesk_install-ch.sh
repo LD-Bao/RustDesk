@@ -1,5 +1,5 @@
 #!/bin/bash
-# RustDesk Server 一键安装脚本
+# RustDesk Server 自动下载并安装脚本
 
 set -e
 
@@ -8,19 +8,35 @@ echo "更新系统并安装依赖..."
 sudo apt update
 sudo apt install -y curl openssl
 
-# 下载 RustDesk 服务器组件
-echo "下载 RustDesk 服务器组件..."
-curl -L -o rustdesk-server-hbbr_1.1.12_amd64.deb https://gitee.com/LD-BAO/rust-desk/raw/master/rustdesk-server-hbbr_1.1.12_amd64.deb
-curl -L -o rustdesk-server-hbbs_1.1.12_amd64.deb https://gitee.com/LD-BAO/rust-desk/raw/master/rustdesk-server-hbbs_1.1.12_amd64.deb
+# 定义文件下载目录
+base_url="https://gitee.com/LD-BAO/rust-desk/raw/master/"
+
+# 获取包含 rustdesk 的文件链接
+echo "获取 RustDesk 服务器最新版本的文件链接..."
+file_links=$(curl -s "$base_url" | grep -oP '(?<=href=")[^"]*rustdesk-server-[^"]*amd64\.deb')
+
+# 检查是否找到文件
+if [[ -z "$file_links" ]]; then
+    echo "未找到包含 'rustdesk-server' 的文件链接，请检查目录是否存在文件。"
+    exit 1
+fi
+
+# 下载文件
+for link in $file_links; do
+    file_url="${base_url}${link}"
+    file_name=$(basename "$file_url")
+    echo "下载 $file_name..."
+    curl -L -o "$file_name" "$file_url"
+done
 
 # 安装下载的 .deb 文件
 echo "安装 RustDesk 服务器组件..."
-sudo dpkg -i rustdesk-server-hbbr_1.1.12_amd64.deb
-sudo dpkg -i rustdesk-server-hbbs_1.1.12_amd64.deb
+sudo dpkg -i rustdesk-server-hbbr_*.deb
+sudo dpkg -i rustdesk-server-hbbs_*.deb
 
 # 删除下载的 .deb 文件
-rm rustdesk-server-hbbr_1.1.12_amd64.deb
-rm rustdesk-server-hbbs_1.1.12_amd64.deb
+rm rustdesk-server-hbbr_*.deb
+rm rustdesk-server-hbbs_*.deb
 
 # 启动并启用 hbbs 和 hbbr 服务
 echo "启动并启用 RustDesk 服务..."
