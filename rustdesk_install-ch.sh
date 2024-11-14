@@ -1,5 +1,5 @@
 #!/bin/bash
-# RustDesk Server 一键安装脚本
+# RustDesk Server 一键安装脚本（适用于无法连接 GitHub 的环境）
 
 set -e
 
@@ -8,8 +8,8 @@ echo "更新系统并安装依赖..."
 sudo apt update
 sudo apt install -y curl openssl
 
-# 使用清华大学镜像下载适用于 x86-64 的 RustDesk 服务器组件
-echo "使用清华大学镜像下载 RustDesk 服务器组件"
+# 使用清华大学镜像下载 RustDesk 服务器组件
+echo "使用清华大学镜像下载 RustDesk 服务器组件..."
 curl -L -o hbbs https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs-linux-amd64
 curl -L -o hbbr https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr-linux-amd64
 
