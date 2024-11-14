@@ -20,15 +20,15 @@ curl -L -o hbbs $hbbs_url
 curl -L -o hbbr $hbbr_url
 
 # 将组件移动到系统路径并赋予可执行权限
-sudo mv hbbs /usr/local/bin/
-sudo mv hbbr /usr/local/bin/
-sudo chmod +x /usr/local/bin/hbbs /usr/local/bin/hbbr
-
-# 创建密钥目录并生成密钥文件
-echo "生成密钥文件..."
-sudo mkdir -p /etc/rustdesk
-openssl genrsa -out /etc/rustdesk/hbbs.key 2048
-openssl rsa -in /etc/rustdesk/hbbs.key -pubout -out /etc/rustdesk/hbbs.pub
+if [[ -f "hbbs" && -f "hbbr" ]]; then
+    echo "下载完成，移动 RustDesk 服务器组件..."
+    sudo mv hbbs /usr/local/bin/
+    sudo mv hbbr /usr/local/bin/
+    sudo chmod +x /usr/local/bin/hbbs /usr/local/bin/hbbr
+else
+    echo "下载失败，请检查网络连接或镜像源。"
+    exit 1
+fi
 
 # 创建 hbbs 服务文件
 echo "创建 hbbs 服务文件..."
@@ -39,7 +39,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/hbbs -k /etc/rustdesk/hbbs.key
+ExecStart=/usr/local/bin/hbbs -k /var/lib/rustdesk-server/id_ed25519
 Restart=on-failure
 
 [Install]
@@ -68,20 +68,27 @@ sudo systemctl daemon-reload
 sudo systemctl enable hbbs hbbr
 sudo systemctl start hbbs hbbr
 
-# 验证服务状态
-echo "验证 RustDesk 服务状态..."
-sudo systemctl status hbbs --no-pager
-sudo systemctl status hbbr --no-pager
+# 等待密钥生成
+echo "等待 RustDesk 自动生成密钥文件..."
+sleep 5  # 等待一会，确保密钥文件生成
 
-# 获取服务器IP地址
-server_ip=$(hostname -I | awk '{print $1}')
+# 检查密钥文件是否生成
+if [[ -f "/var/lib/rustdesk-server/id_ed25519.pub" ]]; then
+    echo "密钥文件已生成。"
+else
+    echo "密钥文件未生成，请检查服务状态。"
+    exit 1
+fi
+
+# 获取服务器公网 IP 地址
+server_ip=$(curl -s https://ifconfig.me)
 
 # 输出服务器详细信息
 echo "--------------------------------------"
 echo "RustDesk 服务器安装完成！"
 echo "服务器信息："
-echo "服务器地址: $server_ip"
+echo "服务器公网地址: $server_ip"
 echo "服务器端口 (默认): 21116"
 echo "公钥内容 (复制到客户端以便连接到此服务器)："
-cat /etc/rustdesk/hbbs.pub
+cat /var/lib/rustdesk-server/id_ed25519.pub
 echo "--------------------------------------"
