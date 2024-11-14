@@ -1,5 +1,5 @@
 #!/bin/bash
-# RustDesk Server 一键安装脚本（适用于无法连接 GitHub 的环境）
+# RustDesk Server 一键安装脚本
 
 set -e
 
@@ -8,75 +8,22 @@ echo "更新系统并安装依赖..."
 sudo apt update
 sudo apt install -y curl openssl
 
-# 使用清华大学镜像下载 RustDesk 服务器组件
-echo "使用清华大学镜像下载 RustDesk 服务器组件..."
-curl -L -o hbbs https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs
-curl -L -o hbbr https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr
+# 下载 RustDesk 服务器的 `.deb` 文件
+echo "下载 RustDesk 服务器组件..."
+curl -L -o hbbs.deb https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs_amd64.deb
+curl -L -o hbbr.deb https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr_amd64.deb
 
-# 验证下载的文件是否为有效的可执行文件
-if file hbbs | grep -q 'ELF 64-bit'; then
-    echo "hbbs 文件已成功下载并验证为有效的 64 位 ELF 可执行文件。"
-else
-    echo "下载的 hbbs 文件无效，可能是 HTML 文件。请检查下载链接。"
-    rm -f hbbs
-    exit 1
-fi
+# 安装下载的 `.deb` 文件
+sudo dpkg -i hbbs.deb
+sudo dpkg -i hbbr.deb
 
-if file hbbr | grep -q 'ELF 64-bit'; then
-    echo "hbbr 文件已成功下载并验证为有效的 64 位 ELF 可执行文件。"
-else
-    echo "下载的 hbbr 文件无效，可能是 HTML 文件。请检查下载链接。"
-    rm -f hbbr
-    exit 1
-fi
-
-# 将组件移动到系统路径并赋予可执行权限
-echo "下载完成，移动 RustDesk 服务器组件..."
-sudo mv hbbs /usr/local/bin/
-sudo mv hbbr /usr/local/bin/
-sudo chmod +x /usr/local/bin/hbbs /usr/local/bin/hbbr
-
-# 创建 hbbs 服务文件
-echo "创建 hbbs 服务文件..."
-sudo tee /etc/systemd/system/hbbs.service > /dev/null <<EOF
-[Unit]
-Description=RustDesk HBBS Server
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/hbbs -k /var/lib/rustdesk-server/id_ed25519
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 创建 hbbr 服务文件
-echo "创建 hbbr 服务文件..."
-sudo tee /etc/systemd/system/hbbr.service > /dev/null <<EOF
-[Unit]
-Description=RustDesk HBBR Server
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/hbbr
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 重新加载 systemd 服务并启动 hbbs 和 hbbr
-echo "启动并启用 RustDesk 服务..."
-sudo systemctl daemon-reload
+# 启动并启用服务
 sudo systemctl enable hbbs hbbr
 sudo systemctl start hbbs hbbr
 
-# 等待密钥生成
+# 检查密钥生成
 echo "等待 RustDesk 自动生成密钥文件..."
-sleep 5  # 等待一会，确保密钥文件生成
+sleep 5
 
 # 检查密钥文件是否生成
 if [[ -f "/var/lib/rustdesk-server/id_ed25519.pub" ]]; then
