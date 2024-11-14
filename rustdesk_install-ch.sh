@@ -8,22 +8,28 @@ echo "更新系统并安装依赖..."
 sudo apt update
 sudo apt install -y curl openssl
 
-# 下载 RustDesk 服务器的 `.deb` 文件
+# 下载 RustDesk 服务器组件
 echo "下载 RustDesk 服务器组件..."
-curl -L -o hbbs.deb https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs_amd64.deb
-curl -L -o hbbr.deb https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr_amd64.deb
+curl -L -o rustdesk-server-hbbr_1.1.12_amd64.deb https://gitee.com/LD-BAO/rust-desk/raw/master/rustdesk-server-hbbr_1.1.12_amd64.deb
+curl -L -o rustdesk-server-hbbs_1.1.12_amd64.deb https://gitee.com/LD-BAO/rust-desk/raw/master/rustdesk-server-hbbs_1.1.12_amd64.deb
 
-# 安装下载的 `.deb` 文件
-sudo dpkg -i hbbs.deb
-sudo dpkg -i hbbr.deb
+# 安装下载的 .deb 文件
+echo "安装 RustDesk 服务器组件..."
+sudo dpkg -i rustdesk-server-hbbr_1.1.12_amd64.deb
+sudo dpkg -i rustdesk-server-hbbs_1.1.12_amd64.deb
 
-# 启动并启用服务
+# 删除下载的 .deb 文件
+rm rustdesk-server-hbbr_1.1.12_amd64.deb
+rm rustdesk-server-hbbs_1.1.12_amd64.deb
+
+# 启动并启用 hbbs 和 hbbr 服务
+echo "启动并启用 RustDesk 服务..."
 sudo systemctl enable hbbs hbbr
 sudo systemctl start hbbs hbbr
 
-# 检查密钥生成
+# 等待密钥生成
 echo "等待 RustDesk 自动生成密钥文件..."
-sleep 5
+sleep 5  # 等待一会，确保密钥文件生成
 
 # 检查密钥文件是否生成
 if [[ -f "/var/lib/rustdesk-server/id_ed25519.pub" ]]; then
