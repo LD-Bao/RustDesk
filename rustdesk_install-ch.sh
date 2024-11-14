@@ -10,8 +10,8 @@ sudo apt install -y curl openssl
 
 # 使用清华大学镜像下载 RustDesk 服务器组件
 echo "使用清华大学镜像下载 RustDesk 服务器组件..."
-curl -L -o hbbs https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs-linux-amd64
-curl -L -o hbbr https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr-linux-amd64
+curl -L -o hbbs https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs
+curl -L -o hbbr https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr
 
 # 验证下载的文件是否为有效的可执行文件
 if file hbbs | grep -q 'ELF 64-bit'; then
