@@ -13,16 +13,28 @@ echo "使用清华大学镜像下载 RustDesk 服务器组件..."
 curl -L -o hbbs https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbs-linux-amd64
 curl -L -o hbbr https://mirrors.tuna.tsinghua.edu.cn/github-release/rustdesk/rustdesk-server/latest/download/hbbr-linux-amd64
 
-# 将组件移动到系统路径并赋予可执行权限
-if [[ -f "hbbs" && -f "hbbr" ]]; then
-    echo "下载完成，移动 RustDesk 服务器组件..."
-    sudo mv hbbs /usr/local/bin/
-    sudo mv hbbr /usr/local/bin/
-    sudo chmod +x /usr/local/bin/hbbs /usr/local/bin/hbbr
+# 验证下载的文件是否为有效的可执行文件
+if file hbbs | grep -q 'ELF 64-bit'; then
+    echo "hbbs 文件已成功下载并验证为有效的 64 位 ELF 可执行文件。"
 else
-    echo "下载失败，请检查网络连接或镜像源。"
+    echo "下载的 hbbs 文件无效，可能是 HTML 文件。请检查下载链接。"
+    rm -f hbbs
     exit 1
 fi
+
+if file hbbr | grep -q 'ELF 64-bit'; then
+    echo "hbbr 文件已成功下载并验证为有效的 64 位 ELF 可执行文件。"
+else
+    echo "下载的 hbbr 文件无效，可能是 HTML 文件。请检查下载链接。"
+    rm -f hbbr
+    exit 1
+fi
+
+# 将组件移动到系统路径并赋予可执行权限
+echo "下载完成，移动 RustDesk 服务器组件..."
+sudo mv hbbs /usr/local/bin/
+sudo mv hbbr /usr/local/bin/
+sudo chmod +x /usr/local/bin/hbbs /usr/local/bin/hbbr
 
 # 创建 hbbs 服务文件
 echo "创建 hbbs 服务文件..."
