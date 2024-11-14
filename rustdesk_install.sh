@@ -32,8 +32,8 @@ sudo dpkg -i rustdesk-server-hbbr.deb
 
 # 启动并启用服务
 echo "启动并启用 RustDesk 服务..."
-sudo systemctl enable hbbs hbbr
-sudo systemctl start hbbs hbbr
+sudo systemctl enable rustdesk-hbbs rustdesk-hbbr
+sudo systemctl start rustdesk-hbbs rustdesk-hbbr
 
 # 等待密钥生成
 echo "等待 RustDesk 自动生成密钥文件..."
