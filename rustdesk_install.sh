@@ -1,5 +1,5 @@
 #!/bin/bash
-# RustDesk Server 一键安装脚本
+# RustDesk Server 一键安装脚本（适用于可以访问 GitHub 的国外服务器）
 
 set -e
 
@@ -8,63 +8,30 @@ echo "更新系统并安装依赖..."
 sudo apt update
 sudo apt install -y curl openssl
 
-# 获取最新版本的下载链接
-echo "正在获取 RustDesk 最新版本信息..."
+# 获取 RustDesk 服务器最新版本的文件链接
+echo "获取 RustDesk 服务器最新版本信息..."
 latest_version=$(curl -s https://api.github.com/repos/rustdesk/rustdesk-server/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
-hbbs_url="https://github.com/rustdesk/rustdesk-server/releases/download/$latest_version/hbbs"
-hbbr_url="https://github.com/rustdesk/rustdesk-server/releases/download/$latest_version/hbbr"
+hbbs_url="https://github.com/rustdesk/rustdesk-server/releases/download/$latest_version/rustdesk-server-hbbs_${latest_version}_amd64.deb"
+hbbr_url="https://github.com/rustdesk/rustdesk-server/releases/download/$latest_version/rustdesk-server-hbbr_${latest_version}_amd64.deb"
 
-# 下载最新的 RustDesk 服务器组件
-echo "下载最新版本的 RustDesk 服务器组件：$latest_version"
-curl -L -o hbbs $hbbs_url
-curl -L -o hbbr $hbbr_url
+# 下载 RustDesk 服务器组件
+echo "下载 RustDesk 服务器组件：$latest_version"
+curl -L -o rustdesk-server-hbbs.deb "$hbbs_url"
+curl -L -o rustdesk-server-hbbr.deb "$hbbr_url"
 
-# 将组件移动到系统路径并赋予可执行权限
-if [[ -f "hbbs" && -f "hbbr" ]]; then
-    echo "下载完成，移动 RustDesk 服务器组件..."
-    sudo mv hbbs /usr/local/bin/
-    sudo mv hbbr /usr/local/bin/
-    sudo chmod +x /usr/local/bin/hbbs /usr/local/bin/hbbr
-else
-    echo "下载失败，请检查网络连接或镜像源。"
+# 检查是否成功下载
+if [[ ! -f "rustdesk-server-hbbs.deb" || ! -f "rustdesk-server-hbbr.deb" ]]; then
+    echo "下载失败，请检查网络连接或链接是否有效。"
     exit 1
 fi
 
-# 创建 hbbs 服务文件
-echo "创建 hbbs 服务文件..."
-sudo tee /etc/systemd/system/hbbs.service > /dev/null <<EOF
-[Unit]
-Description=RustDesk HBBS Server
-After=network.target
+# 安装 RustDesk 服务器组件
+echo "安装 RustDesk 服务器组件..."
+sudo dpkg -i rustdesk-server-hbbs.deb
+sudo dpkg -i rustdesk-server-hbbr.deb
 
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/hbbs -k /var/lib/rustdesk-server/id_ed25519
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 创建 hbbr 服务文件
-echo "创建 hbbr 服务文件..."
-sudo tee /etc/systemd/system/hbbr.service > /dev/null <<EOF
-[Unit]
-Description=RustDesk HBBR Server
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/hbbr
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 重新加载 systemd 服务并启动 hbbs 和 hbbr
+# 启动并启用服务
 echo "启动并启用 RustDesk 服务..."
-sudo systemctl daemon-reload
 sudo systemctl enable hbbs hbbr
 sudo systemctl start hbbs hbbr
 
